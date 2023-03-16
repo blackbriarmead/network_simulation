@@ -25,16 +25,11 @@ class Network:
                 #early termination
                 if(not node1 == None and not node2 == None):
                     break
-        #establish link from node1 to node2
-        link1 = Link(10)
-        this.links.append(link1)
-        node1.add_link(link1,0)
-        node2.add_link(link1,1)
-        #establish link from node2 to node1
-        link2 = Link(10)
-        this.links.append(link2)
-        node1.add_link(link2,0)
-        node2.add_link(link2,1)
+        #establish link from node1 to node2 and vice versa
+        link = Link(10)
+        this.links.append(link)
+        node1.add_link(link,0)
+        node2.add_link(link,1)
     
     def display(this):
         print("Displaying information about structure of network\n\n")
