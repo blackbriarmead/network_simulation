@@ -16,5 +16,6 @@ net.add_node(node3)
 net.add_bidirectional_link(bin(1),bin(2))
 net.add_bidirectional_link(bin(2),bin(3))
 sim = Simulation(net)
-node1.send_data([1,1,1,1,1,1,1,1],node1.outboundlinks[0])
-sim.simulate(iterations = 50)
+payload = [1,1,1,1,1,1,1,1] + [1,1,1,1,1,1,1,0]
+node1.send_data(payload,node1.outboundlinks[0])
+sim.simulate(iterations = 100)

@@ -1,4 +1,5 @@
-from Frame import Frame
+from Frame import *
+import util
 
 class Node:
     flag = [0,1,1,1,1,1,1,0]
@@ -37,8 +38,8 @@ class Node:
     
     #send data to neighboring node. This is not concerned with routing
     def send_data(this, data, outbound_link):
-        frame = Frame(data)#construct a frame with the desired data
         target_ip = outbound_link.dest.ip_addr
+        frame = Frame(data,target_ip,this.ip_addr)#construct a frame with the desired data        
         this.outbound_data_buffers[target_ip] = frame.data
         this.outbound_target = outbound_link
 
@@ -59,8 +60,6 @@ class Node:
         this.inbound_data_buffers[link.source.ip_addr] = InboundFrameHandler()
 
 class InboundFrameHandler():
-    
-
     def __init__(this):
         this.flag =       [0,1,1,1,1,1,1,0]
         this.de_flagged = [0,1,1,1,1,1,0]
@@ -107,6 +106,11 @@ class InboundFrameHandler():
                 print("second flag detected, frame ended")
                 print("final frame:",this.frame)
                 print("final data:",this.data)
+                print("dest_adr: ",util.list_to_int(this.data[0:8]))
+                print("source_adr: ",util.list_to_int(this.data[8:16]))
+                print("eth_protocol: ",util.list_to_int(this.data[16:20]))
+                print("payload length (bytes): ",util.list_to_int(this.data[20:32]))
+                print("payload: ",this.data[32:32+8*util.list_to_int(this.data[20:32])])
             else:
                 #if not deflagged, just keep adding to data buffer
                 if(not this.contains_deflagged(this.frame)):
