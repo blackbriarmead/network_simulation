@@ -14,6 +14,6 @@ class Link:
 
     #simulates the link. returns the output of the link and updates link with input value
     #propagates each bit in transit to the next position as well
-    def simulate(this, input, which = 0):
+    def simulate(this, input, which):
         this.data[which].insert(0,input)
         this.output[which] = this.data[which].pop()

@@ -13,7 +13,8 @@ class Node:
         print("  mac_addr: ",this.mac_addr)
         print(" table of connected mac addresses: ")
         for i in range(len(this.dest_mac)):
-            print("Port",i," -> ", this.dest_mac[i])
+            print("Port",i," -> ", bin(this.dest_mac[i]))
+            print("link side: ",this.link_handlers[i].side)
         
     
     #send data to neighboring node. This is not concerned with routing
@@ -29,12 +30,14 @@ class Node:
         for link_handler in this.link_handlers:
             frame, port_no = link_handler.receive_data()
             if(not frame == None):
-                print(frame.eth_protocol)
+                frame.display()
                 match frame.eth_protocol:
                     case Eth_Protocol.NEIGHBOR_DISCOVERY_REQUEST:
-                        this.dest_mac[port_no] = frame.source_adr
+                        this.dest_mac[port_no] = int(frame.source_adr)
                         this.neighbor_discovery_reply(port_no)
                         print("neighbor discovered via request")
+                        print("my mac address: ",this.mac_addr)
+                        print("neighbor mac address: ",int(frame.source_adr))
                         break
                     case Eth_Protocol.NEIGHBOR_DISCOVERY_REPLY:
                         this.dest_mac[port_no] = frame.source_adr
@@ -49,9 +52,11 @@ class Node:
         this.neighbor_discovery_request(len(this.link_handlers)-1)
 
     def neighbor_discovery_request(this, port_no):
+        print("initiating neighbor discovery request")
         this.link_handlers[port_no].initiate_send_data( [0 for x in range(8)],dest_mac = 0, protocol = Eth_Protocol.NEIGHBOR_DISCOVERY_REQUEST)
 
     def neighbor_discovery_reply(this, port_no):
+        print("initiating neighbor discovery reply")
         this.link_handlers[port_no].initiate_send_data( [0 for x in range(8)],dest_mac = this.dest_mac[port_no], protocol = Eth_Protocol.NEIGHBOR_DISCOVERY_REPLY)
 
 class LinkHandler:
@@ -64,13 +69,13 @@ class LinkHandler:
         this.port_no = port_no
 
     def receive_data(this):
-        received = this.link.output[this.side]
+        received = this.link.output[1-this.side]
         processed = this.inbound_handler.add_bit(received)
         return((processed,this.port_no))
                     
 
     def send_data(this):
-        this.link.simulate(this.outbound_handler.get_next_bit(), which = this.side)
+        this.link.simulate(this.outbound_handler.get_next_bit(), this.side)
 
     #dest_adr specifies the intended target, but is not required for a wired link
     def initiate_send_data(this, data, dest_mac = 0, protocol = Eth_Protocol.ETHERNET):

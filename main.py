@@ -11,8 +11,11 @@ node1 = Node(bin(1))
 net.add_node(node1)
 node2 = Node(bin(2))
 net.add_node(node2)
+node3 = Node(bin(3))
+net.add_node(node3)
 
 net.add_link(bin(1),bin(2))
+net.add_link(bin(2),bin(3))
 sim = Simulation(net)
 s = ascii('huy is a sussy baka')[1:-1]
 print([ord(x) for x in s])
@@ -21,5 +24,5 @@ payload = []
 for item in s:
     payload = payload + item
 sim.display()
-sim.simulate(iterations = 1000)
+sim.simulate(iterations = 2000)
 sim.display()

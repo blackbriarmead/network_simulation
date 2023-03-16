@@ -57,3 +57,10 @@ class Frame:
         this.eth_protocol = util.list_to_int(this.data[16:20])
         this.payload_length = util.list_to_int(this.data[20:32])
         this.payload = this.data[32:32+8*this.payload_length]
+
+    def display(this):
+        print("dest_adr: ",this.dest_adr)
+        print("source_adr: ",this.source_adr)
+        print("eth_protocol: ",this.eth_protocol)
+        print("payload_length: ",this.payload_length)
+        print("payload: ",this.payload)
