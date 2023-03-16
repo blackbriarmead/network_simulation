@@ -14,17 +14,9 @@ class Simulation:
 
     #each network step creates a copy of the network, because in minecraft, everything happens one tick at a time
     def simulateStep(this):
-        old = this.network
-        netcopy = copy.deepcopy(this.network)
-
-        #steps:
-
-        #for each node
-        #send data down link
-        #get receiver node to 
 
         #insert data into links
-        for node in netcopy.nodes:
+        for node in this.network.nodes:
             outboundlinks = node.outboundlinks
             for outlink in outboundlinks:
                 #get next bit from outbound_buffer
@@ -35,15 +27,13 @@ class Simulation:
                     input = outbound_buffer.pop(0) #pop from beginning becase we are sending back to front
                 outlink.simulate(input)
 
-        for node in netcopy.nodes:
-            inboundlinks = node.inboundlinks
-            for inlink in inboundlinks:
-                received = inlink.output #output is latest data produced by link
-                source_ip = inlink.source.ip_addr
-                inbound_buffer = node.inbound_data_buffers[source_ip]
-                inbound_buffer.append(received)
+        #let nodes receive data and process frames
+        for node in this.network.nodes:
+            for inlink in node.inboundlinks:
+                node.receive_data(inlink)
 
-        this.network = netcopy #update current representation of network
+        
+
         this.time += 1
 
     def simulate(this, iterations = 1, display = False):
