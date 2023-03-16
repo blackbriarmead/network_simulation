@@ -2,9 +2,12 @@ import util
 import enum
 
 class Eth_Protocol(enum.IntEnum):
-    ETHERNET = 0
+    ETHERNET = 0,
+    NEIGHBOR_DISCOVERY_REQUEST = 1
+    NEIGHBOR_DISCOVERY_REPLY = 2
 
-class Frame:
+#constructs the binary representation of a frame
+class FrameConstructor:
 
     flag = [0,1,1,1,1,1,1,0] #flag is used to determine start and end of frames
 
@@ -44,3 +47,13 @@ class Frame:
             output.append(d)
         
         return(output)
+    
+#encodes the useful information from a decoded frame    
+class Frame:
+    def __init__(this, data):
+        this.data = data
+        this.dest_adr = util.list_to_int(this.data[0:8])
+        this.source_adr = util.list_to_int(this.data[8:16])
+        this.eth_protocol = util.list_to_int(this.data[16:20])
+        this.payload_length = util.list_to_int(this.data[20:32])
+        this.payload = this.data[32:32+8*this.payload_length]

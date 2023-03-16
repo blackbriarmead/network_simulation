@@ -3,61 +3,59 @@ import util
 
 class Node:
     flag = [0,1,1,1,1,1,1,0]
-    def __init__(this, ip_addr):
-        this.routing_table = []
-        this.outboundlinks = []
-        this.inboundlinks = []
-        this.ip_addr = ip_addr
-        this.outbound_data_buffers = {}
-        this.inbound_data_buffers = {}
-        this.outbound_target = None
+    def __init__(this, mac_addr):
+        this.mac_addr = mac_addr
+        this.link_handlers = []
+        this.dest_mac = []
 
     def display(this):
         print("Node:")
-        print("  ip_addr: ",this.ip_addr)
-        print("  inbound links:")
-        for inboundlink in this.inboundlinks:
-            inboundlink.display()
-            print()
-        print("  outbound links: ")
-        for outboundlink in this.outboundlinks:
-            outboundlink.display()
-            print()
-
-        print("outbound_data_buffers: ")
-        for ip_addr in this.outbound_data_buffers.keys():
-            print(this.ip_addr," -> ",ip_addr,":",[str(x) for x in this.outbound_data_buffers[ip_addr]])
-
-        print("inbound_data_buffers: ")
-        for ip_addr in this.inbound_data_buffers.keys():
-            print(ip_addr," -> ",this.ip_addr,":")
-            this.inbound_data_buffers[ip_addr].display()
-
-    def get_ip_addr(this):
-        return(this.ip_addr)
+        print("  mac_addr: ",this.mac_addr)
     
     #send data to neighboring node. This is not concerned with routing
-    def send_data(this, data, outbound_link):
-        target_ip = outbound_link.dest.ip_addr
-        frame = Frame(data,target_ip,this.ip_addr)#construct a frame with the desired data        
-        this.outbound_data_buffers[target_ip] = frame.data
-        this.outbound_target = outbound_link
+    def send_data(this):
+        for link_handler in this.link_handlers:
+            link_handler.send_data()
+
+    def initiate_send_data(this, data, port_no):
+        this.link_handlers[port_no].initiate_send_data(data,this.dest_mac[port_no])
 
     #receiving data means monitoring inbound_links and pushing to respective buffer
-    def receive_data(this, inbound_link):
-        source_ip = inbound_link.source.ip_addr
-        received = inbound_link.output #output is latest data produced by link
-        this.inbound_data_buffers[source_ip].add_bit(received)
+    def receive_data(this):
+        for link_handler in this.link_handlers:
+            frame, port_no = link_handler.receive_data()
+            if(not frame == None):
+                frame.source_adr
     
-    #adds outbound link to array of outbound links
-    def add_outbound_link(this, link):
-        this.outboundlinks.append(link)
-        this.outbound_data_buffers[link.dest.ip_addr] = []
+    #adds link to link handler
+    def add_link(this, link, side):
+        this.link_handlers.append(LinkHandler(this.mac_addr,link,side,len(this.link_handlers)))
+        this.dest_mac.append(0)
 
-    #adds inbound link to array of inbound links
-    def add_inbound_link(this, link):
-        this.inboundlinks.append(link)
-        this.inbound_data_buffers[link.source.ip_addr] = InboundFrameHandler()
+class LinkHandler:
+    def __init__(this, mac_addr, link, side, port_no):
+        this.mac_addr = mac_addr
+        this.inbound_handler = InboundFrameHandler()
+        this.outbound_handler = OutboundFrameHandler()
+        this.link = link
+        this.side = side
+        this.port_no = port_no
+
+    def receive_data(this):
+        received = this.link.output[this.side]
+        processed = this.inbound_handler.add_bit(received)
+        return((processed,this.port_no))
+                    
+
+    def send_data(this):
+        this.link.simulate(this.outbound_handler.get_next_bit(), which = this.side)
+
+    #dest_adr specifies the intended target, but is not required for a wired link
+    def initiate_send_data(this, data, dest_mac = 0):
+        this.outbound_handler.frame = FrameConstructor(data,bin(dest_mac),this.mac_addr).data
+
+                
+
 
 class InboundFrameHandler():
     def __init__(this):
@@ -77,7 +75,7 @@ class InboundFrameHandler():
 
     def add_bit(this,bit):
         this.frame.append(bit)
-        this.process_data()
+        return(this.process_data())
 
     def contains_flag(this, data):
         return(data[-len(this.flag):] == this.flag)
@@ -105,12 +103,8 @@ class InboundFrameHandler():
                 this.finished = True
                 print("second flag detected, frame ended")
                 print("final frame:",this.frame)
-                print("final data:",this.data)
-                print("dest_adr: ",util.list_to_int(this.data[0:8]))
-                print("source_adr: ",util.list_to_int(this.data[8:16]))
-                print("eth_protocol: ",util.list_to_int(this.data[16:20]))
-                print("payload length (bytes): ",util.list_to_int(this.data[20:32]))
-                print("payload: ",this.data[32:32+8*util.list_to_int(this.data[20:32])])
+                return(Frame(this.data))
+
             else:
                 #if not deflagged, just keep adding to data buffer
                 if(not this.contains_deflagged(this.frame)):
@@ -118,3 +112,19 @@ class InboundFrameHandler():
                 #if deflagged, don't add latest bit
                 else:
                     pass
+
+class OutboundFrameHandler():
+    def __init__(this):
+        this.frame = []
+
+    def display(this):
+        print("Frame: ", this.frame)
+        print("Data: ", this.frame)
+        print("frame_start: ", this.frame_start)
+        print("finished: ", this.finished)
+
+    def get_next_bit(this):
+        bit = 0
+        if(not len(this.frame) == 0):
+            return(this.frame.pop(0))
+        

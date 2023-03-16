@@ -17,20 +17,11 @@ class Simulation:
 
         #insert data into links
         for node in this.network.nodes:
-            outboundlinks = node.outboundlinks
-            for outlink in outboundlinks:
-                #get next bit from outbound_buffer
-                dest_ip = outlink.dest.ip_addr
-                outbound_buffer = node.outbound_data_buffers[dest_ip]
-                input = 0
-                if(not len(outbound_buffer) == 0):
-                    input = outbound_buffer.pop(0) #pop from beginning becase we are sending back to front
-                outlink.simulate(input)
+            node.send_data()
 
         #let nodes receive data and process frames
         for node in this.network.nodes:
-            for inlink in node.inboundlinks:
-                node.receive_data(inlink)
+            node.receive_data()
 
         
 
